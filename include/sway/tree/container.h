@@ -1,5 +1,6 @@
 #ifndef _SWAY_CONTAINER_H
 #define _SWAY_CONTAINER_H
+#include <limits.h>
 #include <scenefx/types/wlr_scene.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -150,6 +151,7 @@ struct sway_container {
 	float alpha;
 
 	int corner_radius;
+
 	bool blur_enabled;
 	bool shadow_enabled;
 	float dim;
