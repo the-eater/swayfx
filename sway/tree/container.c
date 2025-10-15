@@ -293,10 +293,10 @@ void container_update(struct sway_container *con) {
 	scene_rect_set_color(con->title_bar.border, colors->border, alpha);
 
 	wlr_scene_rect_set_backdrop_blur(con->title_bar.background, con->blur_enabled);
-	wlr_scene_rect_set_backdrop_blur_optimized(con->title_bar.background, con->blur_enabled);
+	// wlr_scene_rect_set_backdrop_blur_optimized(con->title_bar.background, con->blur_enabled);
 
 	wlr_scene_rect_set_backdrop_blur(con->title_bar.border, con->blur_enabled);
-	wlr_scene_rect_set_backdrop_blur_optimized(con->title_bar.border, con->blur_enabled);
+	// wlr_scene_rect_set_backdrop_blur_optimized(con->title_bar.border, con->blur_enabled);
 
 	if (con->view) {
 		scene_rect_set_color(con->border.top, colors->child_border, alpha);
@@ -305,13 +305,13 @@ void container_update(struct sway_container *con) {
 		scene_rect_set_color(con->border.right, right, alpha);
 
 		wlr_scene_rect_set_backdrop_blur(con->border.top, con->blur_enabled);
-		wlr_scene_rect_set_backdrop_blur_optimized(con->border.top, con->blur_enabled);
+		// wlr_scene_rect_set_backdrop_blur_optimized(con->border.top, con->blur_enabled);
 		wlr_scene_rect_set_backdrop_blur(con->border.bottom, con->blur_enabled);
-		wlr_scene_rect_set_backdrop_blur_optimized(con->border.bottom, con->blur_enabled);
+		// wlr_scene_rect_set_backdrop_blur_optimized(con->border.bottom, con->blur_enabled);
 		wlr_scene_rect_set_backdrop_blur(con->border.left, con->blur_enabled);
-		wlr_scene_rect_set_backdrop_blur_optimized(con->border.left, con->blur_enabled);
+		// wlr_scene_rect_set_backdrop_blur_optimized(con->border.left, con->blur_enabled);
 		wlr_scene_rect_set_backdrop_blur(con->border.right, con->blur_enabled);
-		wlr_scene_rect_set_backdrop_blur_optimized(con->border.right, con->blur_enabled);
+		// wlr_scene_rect_set_backdrop_blur_optimized(con->border.right, con->blur_enabled);
 	}
 
 	if (con->title_bar.title_text) {
@@ -319,7 +319,7 @@ void container_update(struct sway_container *con) {
 		sway_text_node_set_background(con->title_bar.title_text, colors->background);
 
 		sway_text_node_set_backdrop_blur(con->title_bar.title_text, con->blur_enabled);
-		sway_text_node_set_backdrop_blur_optimized(con->title_bar.title_text, con->blur_enabled);
+		// sway_text_node_set_backdrop_blur_optimized(con->title_bar.title_text, con->blur_enabled);
 	}
 
 	if (con->title_bar.marks_text) {
@@ -327,7 +327,7 @@ void container_update(struct sway_container *con) {
 		sway_text_node_set_background(con->title_bar.marks_text, colors->background);
 
 		sway_text_node_set_backdrop_blur(con->title_bar.marks_text, con->blur_enabled);
-		sway_text_node_set_backdrop_blur_optimized(con->title_bar.marks_text, con->blur_enabled);
+		// sway_text_node_set_backdrop_blur_optimized(con->title_bar.marks_text, con->blur_enabled);
 	}
 
 	if (con->dim_rect) {
@@ -468,11 +468,11 @@ void container_arrange_title_bar(struct sway_container *con) {
 	} else if (config->rounded_corners.skip & R_CORNER_SKIP_BETWEEN_TABS && (con->current.parent || con->current.workspace)) {
 		if (layout == L_TABBED && siblings->length > 1) {
 			if (siblings->items[0] == con) {
-				corners &= ~CORNER_LOCATION_TOP_RIGHT;
+				corners &= ~CORNER_LOCATION_RIGHT;
 			} else if (siblings->items[siblings->length - 1] == con) {
-				corners &= ~CORNER_LOCATION_TOP_LEFT;
+				corners &= ~CORNER_LOCATION_LEFT;
 			} else {
-				corners &= ~CORNER_LOCATION_TOP;
+				corners &= ~CORNER_LOCATION_ALL;
 			}
 		} else if (layout == L_STACKED && siblings->items[0] != con) {
 			corners &= ~CORNER_LOCATION_TOP;
