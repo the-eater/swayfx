@@ -453,6 +453,8 @@ static void arrange_container(struct sway_container *con,
 		wlr_scene_buffer_set_dest_size(con->output_handler, width, height);
 	}
 
+	wlr_scene_blur_target_set_size(con->blur_target, width, height);
+
 	bool has_corner_radius = container_has_corner_radius(con);
 	struct sway_rounded_corners corners = config->rounded_corners;
 	enum corner_location responsible_corners = corners.window;

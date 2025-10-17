@@ -92,6 +92,7 @@ struct sway_container *container_create(struct sway_view *view) {
 
 	// Container tree structure
 	// - scene tree
+	//   - blur target
 	//   - shadow
 	//   - title gutter
 	//     - title bar
@@ -108,6 +109,14 @@ struct sway_container *container_create(struct sway_view *view) {
 	//     - buffer used for output enter/leave events for foreign_toplevel
 	bool failed = false;
 	c->scene_tree = alloc_scene_tree(root->staging, &failed);
+
+	if (!failed) {
+		c->blur_target = wlr_scene_blur_target_create(c->scene_tree, 0, 0);
+		if (!c->blur_target) {
+			sway_log(SWAY_ERROR, "Failed to allocate the blur target");
+			failed = true;
+		}
+	}
 
 	c->shadow = alloc_scene_shadow(c->scene_tree, 0, 0,
 			0, config->shadow_blur_sigma, config->shadow_color, &failed);

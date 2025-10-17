@@ -71,6 +71,7 @@ struct sway_container {
 	struct sway_view *view;
 
 	struct wlr_scene_tree *scene_tree;
+	struct wlr_scene_blur_target *blur_target;
 
 	struct {
 		struct wlr_scene_tree *bar_tree;
