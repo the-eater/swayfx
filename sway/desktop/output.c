@@ -274,6 +274,10 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 			return;
 		}
 
+		if (closest_con) {
+			wlr_scene_blur_source_add_target(closest_con->blur_source, node);
+		}
+
 		// Other buffers should set their own effects manually, like the
 		// text buffer and saved views
 		struct wlr_layer_surface_v1 *layer_surface = NULL;
