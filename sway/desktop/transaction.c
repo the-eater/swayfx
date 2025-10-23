@@ -403,6 +403,8 @@ static void arrange_container(struct sway_container *con,
 	// make sure it's enabled for viewing
 	wlr_scene_node_set_enabled(&con->scene_tree->node, true);
 
+	wlr_scene_blur_source_set_size(con->blur_source, width, height);
+
 	if (con->output_handler) {
 		wlr_scene_buffer_set_dest_size(con->output_handler, width, height);
 	}

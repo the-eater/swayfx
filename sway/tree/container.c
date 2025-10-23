@@ -92,6 +92,7 @@ struct sway_container *container_create(struct sway_view *view) {
 
 	// Container tree structure
 	// - scene tree
+	//   - blur source
 	//   - shadow
 	//   - title bar
 	//     - border
@@ -107,6 +108,8 @@ struct sway_container *container_create(struct sway_view *view) {
 	bool failed = false;
 	c->scene_tree = alloc_scene_tree(root->staging, &failed);
 
+	c->blur_source = alloc_scene_blur_source(c->scene_tree, 0, 0, &failed);
+
 	c->shadow = alloc_scene_shadow(c->scene_tree, 0, 0,
 			0, config->shadow_blur_sigma, config->shadow_color, &failed);
 
@@ -118,12 +121,20 @@ struct sway_container *container_create(struct sway_view *view) {
 	c->title_bar.border = alloc_rect_node(c->title_bar.tree, &failed);
 	c->title_bar.background = alloc_rect_node(c->title_bar.tree, &failed);
 
+	wlr_scene_blur_source_add_target(c->blur_source, &c->title_bar.border->node);
+	wlr_scene_blur_source_add_target(c->blur_source, &c->title_bar.background->node);
+
 	if (view) {
 		// only containers with views can have borders
 		c->border.top = alloc_rect_node(c->border.tree, &failed);
 		c->border.bottom = alloc_rect_node(c->border.tree, &failed);
 		c->border.left = alloc_rect_node(c->border.tree, &failed);
 		c->border.right = alloc_rect_node(c->border.tree, &failed);
+
+		wlr_scene_blur_source_add_target(c->blur_source, &c->border.top->node);
+		wlr_scene_blur_source_add_target(c->blur_source, &c->border.bottom->node);
+		wlr_scene_blur_source_add_target(c->blur_source, &c->border.left->node);
+		wlr_scene_blur_source_add_target(c->blur_source, &c->border.right->node);
 
 		c->dim_rect = alloc_rect_node(c->border.tree, &failed);
 		// Disable rect input
