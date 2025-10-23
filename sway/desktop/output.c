@@ -269,9 +269,6 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 					has_titlebar ? CORNER_LOCATION_BOTTOM : CORNER_LOCATION_ALL);
 			wlr_scene_buffer_set_backdrop_blur(buffer, blur_enabled);
 			wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer, false);
-			// Only enable xray blur if tiled or when xray is explicitly enabled
-			bool should_optimize_blur = (closest_con && !container_is_floating_or_child(closest_con)) || config->blur_xray;
-			wlr_scene_buffer_set_backdrop_blur_optimized(buffer, should_optimize_blur);
 		} else if (wlr_subsurface_try_from_wlr_surface(surface->surface)) {
 			wlr_scene_buffer_set_corner_radius(buffer,
 					container_has_corner_radius(closest_con) ? corner_radius : 0,
@@ -285,7 +282,6 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 			wlr_scene_shadow_set_corner_radius(surface->shadow_node, surface->corner_radius);
 			wlr_scene_buffer_set_backdrop_blur(buffer, surface->blur_enabled);
 			wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer, surface->blur_ignore_transparent);
-			wlr_scene_buffer_set_backdrop_blur_optimized(buffer, surface->blur_xray);
 		}
 	} else if (node->type == WLR_SCENE_NODE_TREE) {
 		struct wlr_scene_tree *tree = wlr_scene_tree_from_node(node);
@@ -293,6 +289,12 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 		wl_list_for_each(node, &tree->children, link) {
 			output_configure_scene(output, node, opacity, corner_radius, blur_enabled, has_titlebar, closest_con);
 		}
+	} else if (node->type == WLR_SCENE_NODE_BLUR_SOURCE) {
+		struct wlr_scene_blur_source *blur_source = wlr_scene_blur_source_from_node(node);
+
+		// Only enable xray blur if tiled or when xray is explicitly enabled
+		bool should_optimize_blur = (closest_con && !container_is_floating_or_child(closest_con)) || config->blur_xray;
+		wlr_scene_blur_source_set_only_blur_bottom_layer(blur_source, should_optimize_blur);
 	}
 }
 
