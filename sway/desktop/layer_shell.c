@@ -382,6 +382,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 
 	layer_parse_criteria(surface);
 	wlr_scene_node_lower_to_bottom(&surface->shadow_node->node);
+	wlr_scene_node_lower_to_bottom(&surface->blur_node->node);
 
 	// focus on new surface
 	if (layer_surface->current.keyboard_interactive &&
