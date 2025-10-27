@@ -248,12 +248,12 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 
 		wlr_scene_buffer_set_opacity(buffer, opacity);
 
-		if (!surface || !surface->surface) {
-			return;
-		}
-
 		if (closest_con) {
 			wlr_scene_blur_source_add_target(closest_con->blur_source, node);
+		}
+
+		if (!surface || !surface->surface) {
+			return;
 		}
 
 		// Other buffers should set their own effects manually, like the
