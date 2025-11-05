@@ -118,6 +118,8 @@ struct sway_container *container_create(struct sway_view *view) {
 	c->title_bar.tree = alloc_scene_tree(c->scene_tree, &failed);
 	c->title_bar.bar_tree = alloc_scene_tree(c->title_bar.tree, &failed);
 
+	c->title_bar.blur = alloc_scene_blur(c->title_bar.bar_tree, 0, 0, &failed);
+
 	c->title_bar.shadow = alloc_scene_shadow(c->title_bar.bar_tree, 0, 0,
 		0, config->shadow_blur_sigma, config->shadow_color, &failed);
 
@@ -180,6 +182,7 @@ struct sway_container *container_create(struct sway_view *view) {
 	c->marks = create_list();
 	c->corner_radius = config->corner_radius;
 	c->blur_enabled = config->blur_enabled;
+	c->blur_border = config->blur_border;
 	c->shadow_enabled = config->shadow_enabled;
 	c->dim = config->default_dim_inactive;
 
@@ -505,6 +508,10 @@ void container_arrange_title_bar(struct sway_container *con) {
 
 	wlr_scene_node_set_position(&con->title_bar.bar_tree->node, title_offset, 0);
 	wlr_scene_node_set_position(&con->title_bar.background->node, thickness, thickness);
+
+	wlr_scene_blur_set_size(con->title_bar.blur, width, height);
+	wlr_scene_blur_set_corner_radius(con->title_bar.blur, background_corner_radius ?
+			background_corner_radius + thickness : 0, corners);
 
 	wlr_scene_rect_set_size(con->title_bar.background, width - thickness * 2,
 			height - thickness * (config->titlebar_separator ? 2 : 1));
