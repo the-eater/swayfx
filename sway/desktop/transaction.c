@@ -643,6 +643,7 @@ static void arrange_container(struct sway_container *con,
 			border_left, top_offset+border_top);
 
 		wlr_scene_node_set_enabled(&con->blur->node, con->blur_enabled);
+	    wlr_scene_node_set_enabled(&con->title_bar.blur->node, !is_titlebar_attached && con->blur_enabled && config->blur_border && config->titlebar_blur);
 
 		wlr_scene_node_set_position(&con->blur->node, con->blur_border ? 0 : border_left, top_offset + (con->blur_border ? 0 : border_top));
 		wlr_scene_blur_set_size(con->blur, con->blur_border ? width : con->current.content_width,
