@@ -285,11 +285,11 @@ static void disable_container(struct sway_container *con) {
 }
 
 static void arrange_container(struct sway_container *con,
-		int width, int height, bool title_bar, int gaps);
+		int width, int height, bool title_bar, int gaps, struct fx_corner_radii parent_corners);
 
 static void arrange_children(enum sway_container_layout layout, list_t *children,
 		struct sway_container *active, struct wlr_scene_tree *content,
-		int width, int height, int gaps) {
+		int width, int height, int gaps, struct fx_corner_radii assigned_corners) {
 	int title_bar_height = container_titlebar_height();
 
 	if (layout == L_TABBED) {
@@ -307,6 +307,22 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			bool activated = child == active;
 			int next_title_offset = round(w * i + w);
 
+			struct fx_corner_radii child_assigned_corners_title = corner_radii_none();
+			if (i == 0) {
+				child_assigned_corners_title = fx_corner_radii_pick(
+					child_assigned_corners_title,
+					fx_corner_radii_filter(assigned_corners, corner_radii_left(CORNER_RADIUS_MAX))
+				);
+			}
+
+			if (i == (children->length - 1)) {
+				child_assigned_corners_title = fx_corner_radii_pick(
+					child_assigned_corners_title,
+					fx_corner_radii_filter(assigned_corners, corner_radii_right(CORNER_RADIUS_MAX))
+				);
+			}
+
+			child->saved_titlebar_corner_radii = fx_corner_radii_filter(corner_radii_top(child->corner_radius), child_assigned_corners_title);
 			arrange_title_bar(child, title_offset, -title_bar_height,
 				next_title_offset - title_offset, title_bar_height);
 			wlr_scene_node_set_enabled(&child->border.tree->node, activated);
@@ -318,7 +334,7 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 
 			int net_height = height - title_bar_height;
 			if (activated && width > 0 && net_height > 0) {
-				arrange_container(child, width, net_height, title_bar_height == 0, 0);
+				arrange_container(child, width, net_height, title_bar_height == 0, 0, fx_corner_radii_filter(assigned_corners, corner_radii_bottom(CORNER_RADIUS_MAX)));
 			} else {
 				disable_container(child);
 			}
@@ -340,6 +356,12 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			struct sway_container *child = children->items[i];
 			bool activated = child == active;
 
+			struct fx_corner_radii child_assigned_titlebar_corners = corner_radii_none();
+			if (i == 0) {
+				child_assigned_titlebar_corners = fx_corner_radii_filter(assigned_corners, corner_radii_top(CORNER_RADIUS_MAX));
+			}
+
+			child->saved_titlebar_corner_radii = child_assigned_titlebar_corners;
 			arrange_title_bar(child, 0, y - title_height, width, title_bar_height);
 			wlr_scene_node_set_enabled(&child->border.tree->node, activated);
 			wlr_scene_node_set_enabled(&child->blur->node, activated);
@@ -350,7 +372,7 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 
 			int net_height = height - title_height;
 			if (activated && width > 0 && net_height > 0) {
-				arrange_container(child, width, net_height, title_bar_height == 0, 0);
+				arrange_container(child, width, net_height, title_bar_height == 0, 0, fx_corner_radii_filter(assigned_corners, corner_radii_bottom(CORNER_RADIUS_MAX)));
 			} else {
 				disable_container(child);
 			}
@@ -363,6 +385,26 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			struct sway_container *child = children->items[i];
 			int cheight = child->current.height;
 
+			struct fx_corner_radii child_assigned_corners = assigned_corners;
+			if (gaps == 0) {
+				child_assigned_corners = corner_radii_none();
+
+				if (i == 0) {
+					child_assigned_corners = fx_corner_radii_pick(
+						child_assigned_corners,
+						fx_corner_radii_filter(assigned_corners, corner_radii_top(CORNER_RADIUS_MAX))
+					);
+				}
+
+				if (i == (children->length - 1)) {
+					child_assigned_corners = fx_corner_radii_pick(
+						child_assigned_corners,
+						fx_corner_radii_filter(assigned_corners, corner_radii_bottom(CORNER_RADIUS_MAX))
+					);
+				}
+			}
+
+			child->saved_titlebar_corner_radii = fx_corner_radii_filter(corner_radii_top(child->corner_radius), child_assigned_corners);
 			wlr_scene_node_set_enabled(&child->border.tree->node, true);
 			wlr_scene_node_set_enabled(&child->blur->node, true);
 			wlr_scene_node_set_enabled(&child->shadow->node,
@@ -370,7 +412,7 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			wlr_scene_node_set_position(&child->scene_tree->node, 0, off);
 			wlr_scene_node_reparent(&child->scene_tree->node, content);
 			if (width > 0 && cheight > 0) {
-				arrange_container(child, width, cheight, true, gaps);
+				arrange_container(child, width, cheight, true, gaps, child_assigned_corners);
 				off += cheight + gaps;
 			} else {
 				disable_container(child);
@@ -382,6 +424,26 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			struct sway_container *child = children->items[i];
 			int cwidth = child->current.width;
 
+			struct fx_corner_radii child_assigned_corners = assigned_corners;
+			if (gaps == 0) {
+				child_assigned_corners = corner_radii_none();
+
+				if (i == 0) {
+					child_assigned_corners = fx_corner_radii_pick(
+						child_assigned_corners,
+						fx_corner_radii_filter(assigned_corners, corner_radii_left(CORNER_RADIUS_MAX))
+					);
+				}
+
+				if (i == (children->length - 1)) {
+					child_assigned_corners = fx_corner_radii_pick(
+						child_assigned_corners,
+						fx_corner_radii_filter(assigned_corners, corner_radii_right(CORNER_RADIUS_MAX))
+					);
+				}
+			}
+
+			child->saved_titlebar_corner_radii = fx_corner_radii_filter(corner_radii_top(child->corner_radius), child_assigned_corners);
 			wlr_scene_node_set_enabled(&child->border.tree->node, true);
 			wlr_scene_node_set_enabled(&child->blur->node, true);
 			wlr_scene_node_set_enabled(&child->shadow->node,
@@ -389,7 +451,7 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 			wlr_scene_node_set_position(&child->scene_tree->node, off, 0);
 			wlr_scene_node_reparent(&child->scene_tree->node, content);
 			if (cwidth > 0 && height > 0) {
-				arrange_container(child, cwidth, height, true, gaps);
+				arrange_container(child, cwidth, height, true, gaps, child_assigned_corners);
 				off += cwidth + gaps;
 			} else {
 				disable_container(child);
@@ -401,7 +463,8 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 }
 
 static void arrange_container(struct sway_container *con,
-		int width, int height, bool title_bar, int gaps) {
+		int width, int height, bool title_bar, int gaps,
+		struct fx_corner_radii assigned_corners) {
 	// this container might have previously been in the scratchpad,
 	// make sure it's enabled for viewing
 	wlr_scene_node_set_enabled(&con->scene_tree->node, true);
@@ -494,11 +557,12 @@ static void arrange_container(struct sway_container *con,
 		wlr_scene_rect_set_size(con->border.right, border_right, vert_border_height);
 
 		if (border_top) {
+			struct fx_corner_radii top_corners = corner_radii_top(corner_radius);
+			top_corners = fx_corner_radii_filter(top_corners, assigned_corners);
 			wlr_scene_rect_set_size(con->border.top, width, border_top + corner_radius);
-			wlr_scene_rect_set_corner_radii(con->border.top, corner_radii_top(!has_corner_radius ? 0 :
-					corner_radius + border_width));
+			wlr_scene_rect_set_corner_radii(con->border.top, fx_corner_radii_extend(top_corners, border_width));
 			wlr_scene_rect_set_clipped_region(con->border.top, (struct clipped_region) {
-				.corners = corner_radii_top(corner_radius),
+				.corners = top_corners,
 				.area = {
 					.x = border_width,
 					.y = border_width,
@@ -511,12 +575,12 @@ static void arrange_container(struct sway_container *con,
 		}
 
 		if (border_bottom) {
+			struct fx_corner_radii bottom_corners = corner_radii_bottom(corner_radius);
+			bottom_corners = fx_corner_radii_filter(bottom_corners, assigned_corners);
 			wlr_scene_rect_set_size(con->border.bottom, width, border_bottom + corner_radius);
-			wlr_scene_rect_set_corner_radii(con->border.bottom, corner_radii_bottom(!has_corner_radius ? 0 :
-					corner_radius + border_width));
-
+			wlr_scene_rect_set_corner_radii(con->border.bottom, fx_corner_radii_extend(bottom_corners, border_width));
 			wlr_scene_rect_set_clipped_region(con->border.bottom, (struct clipped_region) {
-				.corners = corner_radii_bottom(corner_radius),
+				.corners = bottom_corners,
 				// shift up one px to fix https://github.com/WillPower3309/swayfx/issues/386
 				// TODO: proper fix
 				.area = {
@@ -538,16 +602,15 @@ static void arrange_container(struct sway_container *con,
 		wlr_scene_node_set_position(&con->border.right->node,
 			width - border_right, border_top + vert_border_offset);
 
+		con->saved_corner_radii = fx_corner_radii_filter((title_bar && con->current.border == B_NORMAL) || con->current.border == B_CSD ? corner_radii_bottom(con->corner_radius) : corner_radii_all(con->corner_radius), assigned_corners);
+
 		// Dim
 		if (con->dim_rect) {
 			wlr_scene_node_set_position(&con->dim_rect->node, border_left, border_top);
 			wlr_scene_rect_set_size(con->dim_rect, con->current.content_width,
 					con->current.content_height);
-			bool has_titlebar = !title_bar || con->current.border == B_NORMAL;
-			wlr_scene_rect_set_corner_radii(
-				con->dim_rect,
-				has_titlebar ? corner_radii_bottom(con->corner_radius) : corner_radii_all(con->corner_radius)
-			);
+			// bool has_titlebar = !title_bar || con->current.border == B_NORMAL;
+			wlr_scene_rect_set_corner_radii(con->dim_rect, con->saved_corner_radii);
 		}
 
 		// make sure to reparent, it's possible that the client just came out of
@@ -560,19 +623,22 @@ static void arrange_container(struct sway_container *con,
 		wlr_scene_node_set_position(&con->blur->node, border_left, border_top);
 		wlr_scene_blur_set_size(con->blur, con->current.content_width,
 			con->current.content_height);
+
+		wlr_scene_blur_set_corner_radii(con->blur, con->saved_corner_radii);
 	} else {
 		// make sure to disable the title bar if the parent is not managing it
 		if (title_bar) {
 			wlr_scene_node_set_enabled(&con->title_bar.tree->node, false);
 		}
 
+		con->saved_corner_radii = fx_corner_radii_filter(corner_radii_all(con->corner_radius), assigned_corners);
 		wlr_scene_node_set_enabled(&con->shadow->node,
 				container_has_shadow(con) &&
 				(con->current.layout == L_TABBED || con->current.layout == L_STACKED));
 
 		arrange_children(con->current.layout, con->current.children,
 			con->current.focused_inactive_child, con->content_tree,
-			width, height, gaps);
+			width, height, gaps, assigned_corners);
 	}
 }
 
@@ -605,7 +671,7 @@ static void arrange_fullscreen(struct wlr_scene_tree *tree,
 		wlr_scene_node_set_enabled(&fs->scene_tree->node, false);
 	} else {
 		fs_node = &fs->scene_tree->node;
-		arrange_container(fs, width, height, true, container_get_gaps(fs));
+		arrange_container(fs, width, height, true, container_get_gaps(fs), corner_radii_none());
 	}
 
 	wlr_scene_node_reparent(fs_node, tree);
@@ -646,7 +712,7 @@ static void arrange_workspace_floating(struct sway_workspace *ws) {
 		wlr_scene_node_set_enabled(&floater->border.tree->node, true);
 
 		arrange_container(floater, floater->current.width, floater->current.height,
-			true, ws->gaps_inner);
+			true, ws->gaps_inner, corner_radii_all(config->corner_radius));
 	}
 }
 
@@ -654,7 +720,7 @@ static void arrange_workspace_tiling(struct sway_workspace *ws,
 		int width, int height) {
 	arrange_children(ws->current.layout, ws->current.tiling,
 		ws->current.focused_inactive_child, ws->layers.tiling,
-		width, height, ws->gaps_inner);
+		width, height, ws->gaps_inner, config->smart_corner_radius && ws->current_gaps.top == 0 ? corner_radii_none() : corner_radii_all(CORNER_RADIUS_MAX));
 }
 
 static void disable_workspace(struct sway_workspace *ws) {

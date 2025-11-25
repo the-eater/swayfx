@@ -258,10 +258,9 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 				|| wlr_xwayland_surface_try_from_wlr_surface(surface->surface)
 #endif
 				) {
-			int buffer_corner_radius = container_has_corner_radius(closest_con) ? corner_radius : 0;
 			wlr_scene_buffer_set_corner_radii(
 				buffer,
-				has_titlebar ? corner_radii_bottom(buffer_corner_radius) : corner_radii_all(buffer_corner_radius)
+				closest_con ? closest_con->saved_corner_radii : corner_radii_none()
 			);
 		} else if (wlr_subsurface_try_from_wlr_surface(surface->surface)) {
 			wlr_scene_buffer_set_corner_radii(
@@ -305,10 +304,9 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 		bool should_optimize_blur = !container_is_floating_or_child(closest_con) || config->blur_xray;
 		wlr_scene_blur_set_should_only_blur_bottom_layer(blur, should_optimize_blur);
 		wlr_scene_node_set_enabled(node, closest_con->blur_enabled);
-		int blur_corner_radius = container_has_corner_radius(closest_con) ? corner_radius : 0;
 		wlr_scene_blur_set_corner_radii(
 			blur,
-			has_titlebar ? corner_radii_bottom(blur_corner_radius) : corner_radii_all(blur_corner_radius)
+			closest_con->saved_corner_radii
 		);
 	}
 }

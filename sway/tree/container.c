@@ -397,33 +397,10 @@ void container_arrange_title_bar(struct sway_container *con) {
 	int thickness = config->titlebar_border_thickness;
 	int background_corner_radius = container_has_corner_radius(con) ?
 			con->corner_radius + con->current.border_thickness - thickness : 0;
-	struct fx_corner_radii corners = corner_radii_top(background_corner_radius);
-
-	enum sway_container_layout layout;
-	const list_t *siblings;
-	if (con->current.parent) {
-		layout = con->current.parent->current.layout;
-		siblings = con->current.parent->current.children;
-	} else if (con->current.workspace) {
-		layout = con->current.workspace->layout;
-		siblings = con->current.workspace->tiling;
-	}
-
-	if (con->current.parent || con->current.workspace) {
-		if (layout == L_TABBED && siblings->length > 1) {
-			if (siblings->items[0] == con) {
-				corners.top_right = 0;
-			} else if (siblings->items[siblings->length - 1] == con) {
-				corners.top_left = 0;
-			} else {
-				background_corner_radius = 0;
-				corners = corner_radii_none();
-			}
-		} else if (layout == L_STACKED && siblings->items[0] != con) {
-			background_corner_radius = 0;
-			corners = corner_radii_none();
-		}
-	}
+	struct fx_corner_radii corners = fx_corner_radii_filter(
+		corner_radii_top(background_corner_radius),
+		con->saved_titlebar_corner_radii
+	);
 
 	wlr_scene_node_set_position(&con->title_bar.background->node, thickness, thickness);
 	wlr_scene_rect_set_size(con->title_bar.background, width - thickness * 2,

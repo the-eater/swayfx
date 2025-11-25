@@ -126,6 +126,8 @@ struct sway_container {
 	// Used when the view changes to CSD unexpectedly. This will be a non-B_CSD
 	// border which we use to restore when the view returns to SSD.
 	enum sway_container_border saved_border;
+	struct fx_corner_radii saved_corner_radii;
+	struct fx_corner_radii saved_titlebar_corner_radii;
 
 	// The share of the space of parent container this container occupies
 	double width_fraction;
